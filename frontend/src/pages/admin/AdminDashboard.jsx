@@ -30,6 +30,13 @@ export default function AdminDashboard() {
 
         {/* ===== LANDING PAGE CMS ===== */}
         <DashboardCard
+          title="homepage"
+          desc="Go to public pages"
+          action="See public pages"
+          onClick={() => navigate("/")}
+          color="cyan"
+        />
+        <DashboardCard
           title="Projects"
           desc="Add, edit, and manage landing page projects"
           action="Manage Projects"
