@@ -8,7 +8,7 @@ export default function AdminSidebar({ user, logout }) {
     // Helper check perms
     const hasPerm = (perm) => {
         if (!user) return false;
-        if (user.role === 'WEB_LEAD') return true;
+        if (user.permissions && user.permissions.includes('can_manage_everything')) return true;
         return user.permissions && user.permissions.includes(perm);
     };
 
@@ -65,8 +65,8 @@ export default function AdminSidebar({ user, logout }) {
                     </div>
                     {!collapsed && (
                         <div className="overflow-hidden">
-                            <p className="text-sm font-semibold text-white truncate">{user?.username}</p>
-                            <p className="text-xs text-gray-400 truncate">{user?.role}</p>
+                            <p className="text-sm font-semibold text-white truncate">{user?.profile?.full_name || user?.username}</p>
+                            <p className="text-xs text-gray-400 truncate">{user?.profile?.position || "Member"}</p>
                         </div>
                     )}
                 </div>
@@ -74,36 +74,51 @@ export default function AdminSidebar({ user, logout }) {
 
             {/* NAV LINKS */}
             <nav className="flex-1 px-2 overflow-y-auto custom-scrollbar">
-                <NavItem to="/admin/dashboard" icon="📊" label="Dashboard" />
+                {location.pathname.startsWith("/admin/projects/") && location.pathname.split('/').length >= 4 ? (
+                    <>
+                        <p className={`px-4 text-[10px] font-bold text-cyan-500 uppercase mb-2 ${collapsed && "hidden"}`}>Project Command</p>
+                        <NavItem to={`${location.pathname}`} icon="📊" label="Overview" />
+                        <NavItem to={`${location.pathname}?tab=tasks`} icon="📑" label="Timeline" />
+                        <NavItem to={`${location.pathname}?tab=discussions`} icon="💬" label="Threads" />
+                        <NavItem to={`${location.pathname}?tab=team`} icon="👥" label="Personnel" />
 
-                <div className="my-4 border-t border-white/5 mx-4" />
-                <p className={`px-4 text-xs font-bold text-gray-600 uppercase mb-2 ${collapsed && "hidden"}`}>Management</p>
+                        <div className="my-4 border-t border-white/5 mx-4" />
+                        <NavItem to="/admin/projects" icon="🔙" label="Exit Workspace" />
+                    </>
+                ) : (
+                    <>
+                        <NavItem to="/admin/dashboard" icon="📊" label="Dashboard" />
 
-                <NavItem to="/admin/profile" icon="👤" label="My Profile" />
-                <NavItem to="/admin/users" icon="👥" label="Users" perm="can_manage_users" />
-                <NavItem to="/admin/taxonomy" icon="🏷️" label="Structure" perm="can_manage_users" />
-                <NavItem to="/admin/roles" icon="🔑" label="Roles" perm="can_manage_users" />
-                <NavItem to="/admin/team" icon="🛡️" label="Team Ordering" perm="can_manage_team" />
+                        <div className="my-4 border-t border-white/5 mx-4" />
+                        <p className={`px-4 text-xs font-bold text-gray-600 uppercase mb-2 ${collapsed && "hidden"}`}>Management</p>
 
-                <div className="my-4 border-t border-white/5 mx-4" />
-                <p className={`px-4 text-xs font-bold text-gray-600 uppercase mb-2 ${collapsed && "hidden"}`}>Content</p>
+                        <NavItem to="/admin/profile" icon="👤" label="My Profile" />
+                        <NavItem to="/admin/users" icon="👥" label="Users" perm="can_manage_users" />
+                        <NavItem to="/admin/taxonomy" icon="🏷️" label="Structure" perm="can_manage_users" />
+                        <NavItem to="/admin/roles" icon="🔑" label="Roles" perm="can_manage_users" />
+                        <NavItem to="/admin/team" icon="🛡️" label="Team Ordering" perm="can_manage_team" />
 
-                <NavItem to="/admin/projects" icon="🚀" label="Projects" perm="can_manage_projects" />
-                <NavItem to="/admin/events" icon="📅" label="Events" perm="can_manage_events" />
-                <NavItem to="/admin/gallery" icon="🖼️" label="Gallery" perm="can_manage_gallery" />
-                <NavItem to="/admin/announcements" icon="📢" label="Announcements" perm="can_manage_announcements" />
+                        <div className="my-4 border-t border-white/5 mx-4" />
+                        <p className={`px-4 text-xs font-bold text-gray-600 uppercase mb-2 ${collapsed && "hidden"}`}>Content</p>
 
-                <div className="my-4 border-t border-white/5 mx-4" />
+                        <NavItem to="/admin/projects" icon="🚀" label="Projects" perm="can_manage_projects" />
+                        <NavItem to="/admin/events" icon="📅" label="Events" perm="can_manage_events" />
+                        <NavItem to="/admin/gallery" icon="🖼️" label="Gallery" perm="can_manage_gallery" />
+                        <NavItem to="/admin/announcements" icon="📢" label="Announcements" perm="can_manage_announcements" />
 
-                <NavItem to="/admin/sponsorship" icon="🤝" label="Sponsors" />
-                <NavItem to="/admin/contactMessages" icon="✉️" label="Messages" />
+                        <div className="my-4 border-t border-white/5 mx-4" />
 
-                {/* Only show Security/Audit Logs to authorized users */}
-                {hasPerm('can_manage_security') && (
-                    <NavItem to="/admin/audit-logs" icon="🛡️" label="Audit Logs" perm="can_manage_security" />
+                        <NavItem to="/admin/sponsorship" icon="🤝" label="Sponsors" perm="can_manage_announcements" />
+                        <NavItem to="/admin/contactMessages" icon="✉️" label="Messages" perm="can_manage_announcements" />
+
+                        {/* Only show Security/Audit Logs to authorized users */}
+                        {hasPerm('can_manage_security') && (
+                            <NavItem to="/admin/audit-logs" icon="🛡️" label="Audit Logs" perm="can_manage_security" />
+                        )}
+
+                        <NavItem to="/admin/change-password" icon="🔒" label="My Password" />
+                    </>
                 )}
-
-                <NavItem to="/admin/change-password" icon="🔒" label="My Password" />
             </nav>
 
             {/* FOOTER */}

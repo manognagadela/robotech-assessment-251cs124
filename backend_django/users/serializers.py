@@ -43,20 +43,50 @@ class UserSerializer(serializers.ModelSerializer):
     user_roles = RoleSerializer(many=True, read_only=True)
     profile = MemberProfileSerializer(read_only=True)
     permissions = serializers.SerializerMethodField()
+    projects_info = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'role', 'user_roles', 'profile', 'is_active', 'permissions')
+        fields = ('id', 'username', 'email', 'role', 'user_roles', 'profile', 'is_active', 'permissions', 'projects_info')
+
+    def get_projects_info(self, obj):
+        return {
+            'led': list(obj.led_projects.values('id', 'title')),
+            'member': list(obj.projects.values('id', 'title'))
+        }
 
     def get_permissions(self, obj):
         perms = set()
+        
+        # 1. Direct Roles
         for r in obj.user_roles.all():
-            if r.can_manage_users: perms.add('can_manage_users')
-            if r.can_manage_projects: perms.add('can_manage_projects')
-            if r.can_manage_events: perms.add('can_manage_events')
-            if r.can_manage_team: perms.add('can_manage_team')
-            if r.can_manage_gallery: perms.add('can_manage_gallery')
-            if r.can_manage_announcements: perms.add('can_manage_announcements')
-            if r.can_manage_security: perms.add('can_manage_security')
-            if r.name == 'WEB_LEAD': perms.add('can_manage_everything') 
+            self._add_role_perms(r, perms)
+            
+        # 2. Position-Linked Roles (NEW)
+        try:
+            if hasattr(obj, 'profile') and obj.profile and obj.profile.position:
+                # Try to find Position by name
+                # Ideally user.profile.position would be a ForeignKey, but legacy string support
+                pos = TeamPosition.objects.filter(name__iexact=obj.profile.position).select_related('role_link').first()
+                if pos and pos.role_link:
+                    self._add_role_perms(pos.role_link, perms)
+                    # Add role name to perms for frontend visibility checks
+                    if pos.role_link.name == 'WEB_LEAD': perms.add('can_manage_everything') 
+        except Exception: 
+            pass
+
+        # 3. Virtual Sudo Permission
+        if 'can_manage_security' in perms:
+            perms.add('can_manage_everything')
+
         return list(perms)
+
+    def _add_role_perms(self, r, perms):
+        if r.can_manage_users: perms.add('can_manage_users')
+        if r.can_manage_projects: perms.add('can_manage_projects')
+        if r.can_manage_events: perms.add('can_manage_events')
+        if r.can_manage_team: perms.add('can_manage_team')
+        if r.can_manage_gallery: perms.add('can_manage_gallery')
+        if r.can_manage_announcements: perms.add('can_manage_announcements')
+        if r.can_manage_security: perms.add('can_manage_security')
+        if r.name == 'WEB_LEAD': perms.add('can_manage_everything') 

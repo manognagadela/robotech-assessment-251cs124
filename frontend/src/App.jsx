@@ -22,6 +22,7 @@ import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminContactMessages from "./pages/admin/AdminContactMessages";
 import AdminTeamPage from "./pages/admin/AdminTeamPage";
 import AdminProjectsPage from "./pages/admin/AdminProjectsPage";
+import ProjectDashboard from "./pages/admin/ProjectDashboard";
 import AdminGalleryPage from "./pages/admin/AdminGalleryPage";
 import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
 import AdminEvents from "./pages/admin/AdminEvents";
@@ -69,6 +70,7 @@ function App() {
         <Route path="team" element={<AdminTeamPage />} />
 
         <Route path="projects" element={<AdminProjectsPage />} />
+        <Route path="projects/:id" element={<ProjectDashboard />} />
         <Route path="events" element={<AdminEvents />} />
         <Route path="events/new" element={<AdminEventForm />} />
         <Route path="events/:id" element={<AdminEventForm />} />

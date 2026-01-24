@@ -8,15 +8,7 @@ export default function AdminLayout() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        // Initial Auth Check & User Load
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-            navigate("/login");
-            return;
-        }
-
-        // We fetch /me/ to get full profile & permissions
+    const fetchUser = () => {
         api.get("/me/")
             .then(res => {
                 setUser(res.data);
@@ -24,11 +16,25 @@ export default function AdminLayout() {
             })
             .catch(err => {
                 console.error("Auth failed", err);
-                // Force logout on error
                 localStorage.removeItem("accessToken");
                 navigate("/login");
-                setLoading(false); // Stop loading so we don't hang
+                setLoading(false);
             });
+    };
+
+    useEffect(() => {
+        // Initial Load
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+        fetchUser();
+
+        // Re-fetch on window focus (for role updates)
+        const onFocus = () => fetchUser();
+        window.addEventListener("focus", onFocus);
+        return () => window.removeEventListener("focus", onFocus);
     }, [navigate]);
 
     const logout = () => {

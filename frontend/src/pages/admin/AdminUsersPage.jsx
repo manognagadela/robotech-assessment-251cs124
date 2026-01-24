@@ -18,7 +18,7 @@ export default function AdminUsersPage() {
 
     const [form, setForm] = useState({
         username: "", email: "", password: "",
-        role: "CANDIDATE", role_ids: [],
+        role_ids: [],
         full_name: "", position: "", team_name: "",
         year: "", branch: "", sig: "",
         is_active: true, is_public: true, is_alumni: false,
@@ -63,7 +63,6 @@ export default function AdminUsersPage() {
             username: user.username,
             email: user.email,
             password: "",
-            role: user.role,
             role_ids: user.user_roles ? user.user_roles.map(r => r.id) : [],
             full_name: user.profile?.full_name || "",
             position: user.profile?.position || "",
@@ -137,6 +136,16 @@ export default function AdminUsersPage() {
                                     <div>
                                         <div className="font-bold">{u.profile?.full_name || u.username}</div>
                                         <div className="text-xs text-gray-400">{u.profile?.sig || "No SIG"}</div>
+
+                                        {/* Projects Info */}
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                            {u.projects_info?.led?.map(p => (
+                                                <span key={p.id} className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30" title="Project Lead">★ {p.title}</span>
+                                            ))}
+                                            {u.projects_info?.member?.map(p => (
+                                                <span key={p.id} className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30" title="Project Member">{p.title}</span>
+                                            ))}
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="p-4">
@@ -164,19 +173,36 @@ export default function AdminUsersPage() {
                                 <div><label className="text-xs text-gray-400">Username</label><input required disabled={isEditing} className="w-full bg-black/40 border border-white/20 rounded p-2 text-white" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></div>
                                 <div><label className="text-xs text-gray-400">Password</label><input type="password" className="w-full bg-black/40 border border-white/20 rounded p-2 text-white" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
 
-                                <div><label className="text-xs text-gray-400">SIG Assignment</label>
+                                <div><label className="text-xs text-gray-400">Functional Permissions (Roles)</label>
+                                    <div className="flex flex-wrap gap-2 mt-1 max-h-32 overflow-y-auto bg-black/20 p-2 rounded">
+                                        {roles.map(r => (
+                                            <label key={r.id} className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded cursor-pointer border border-white/10 hover:border-cyan-500/50 transition">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={form.role_ids.includes(r.id)}
+                                                    onChange={e => {
+                                                        const newIds = e.target.checked
+                                                            ? [...form.role_ids, r.id]
+                                                            : form.role_ids.filter(id => id !== r.id);
+                                                        setForm({ ...form, role_ids: newIds });
+                                                    }}
+                                                    className="accent-cyan-500"
+                                                />
+                                                <span className="text-xs">{r.name}</span>
+                                            </label>
+                                        ))}
+                                    </div></div>
+
+                                <div><label className="text-xs text-gray-400">SIG / Team</label>
                                     <select className="w-full bg-black/40 border border-white/20 rounded p-2 text-white" value={form.sig} onChange={e => setForm({ ...form, sig: e.target.value })}>
                                         <option value="">-- No SIG --</option>
                                         {sigs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                                     </select></div>
 
-                                <div><label className="text-xs text-gray-400">Position</label>
+                                <div><label className="text-xs text-gray-400">Structure Position</label>
                                     <select className="w-full bg-black/40 border border-white/20 rounded p-2 text-white" value={form.position} onChange={e => setForm({ ...form, position: e.target.value })}>
                                         <option value="">-- Select Position --</option>
-                                        {/* Managed Positions */}
                                         {positions.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                                        {/* Fallback to existing value if not in list */}
-                                        {form.position && !positions.find(p => p.name === form.position) && <option value={form.position}>{form.position} (Legacy)</option>}
                                     </select></div>
                             </div>
 

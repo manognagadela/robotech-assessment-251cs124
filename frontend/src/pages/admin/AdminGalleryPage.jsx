@@ -27,8 +27,8 @@ export default function AdminGalleryPage() {
 
   const loadImages = async () => {
     try {
-      const res = await api.get("/admin/gallery");
-      setImages(res.data);
+      const res = await api.get("/gallery/");
+      setImages(res.data.results || res.data);
     } catch (err) {
       console.error("Failed to load gallery", err);
     }
@@ -65,7 +65,7 @@ export default function AdminGalleryPage() {
 
     try {
       setUploading(true);
-      await api.post("/admin/gallery/upload", fd);
+      await api.post("/gallery/upload/", fd);
       await loadImages();
       showToast("Images uploaded successfully.", "success");
     } catch (err) {
@@ -92,7 +92,7 @@ export default function AdminGalleryPage() {
 
     try {
       setDeleting(true);
-      await api.delete(`/admin/gallery/image/${deleteId}`);
+      await api.delete(`/gallery/${deleteId}/`);
       setDeleteId(null);
       loadImages();
       showToast("Image deleted successfully.", "success");
@@ -234,10 +234,9 @@ export default function AdminGalleryPage() {
         <div
           className={`
             fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-sm
-            ${
-              toast.type === "success"
-                ? "bg-green-600"
-                : toast.type === "error"
+            ${toast.type === "success"
+              ? "bg-green-600"
+              : toast.type === "error"
                 ? "bg-red-600"
                 : "bg-cyan-600"
             }

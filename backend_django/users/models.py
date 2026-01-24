@@ -17,6 +17,8 @@ class Sig(models.Model):
 class TeamPosition(models.Model):
     name = models.CharField(max_length=100, unique=True)
     rank = models.IntegerField(default=100) 
+    # Link to Role for auto-permissions
+    role_link = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True, blank=True, related_name='linked_positions')
     
     class Meta:
         ordering = ['rank', 'name']
@@ -56,7 +58,7 @@ class Role(models.Model):
     can_manage_team = models.BooleanField(default=False)
     can_manage_gallery = models.BooleanField(default=False)
     can_manage_announcements = models.BooleanField(default=False)
-    can_manage_security = models.BooleanField(default=False) # NEW
+    can_manage_security = models.BooleanField(default=False) 
     
     def __str__(self):
         return self.name

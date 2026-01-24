@@ -35,11 +35,15 @@ export default function AdminEvents() {
 
   async function fetchEvents() {
     try {
-      const res = await api.get("/admin/events", {
+      const res = await api.get("/events/", {
         params: { page, limit }
       });
-      setEvents(res.data.data);
-      setTotal(res.data.total);
+      // Handle DRF Standard Pagination or plain list
+      const list = res.data.results || res.data;
+      const count = res.data.count || list.length;
+
+      setEvents(list);
+      setTotal(count);
     } catch (err) {
       console.error(err);
       showToast("Failed to load events.", "error");
@@ -61,7 +65,7 @@ export default function AdminEvents() {
 
     try {
       setDeleting(true);
-      await api.delete(`/admin/events/${deleteId}`);
+      await api.delete(`/events/${deleteId}/`);
       showToast("Event deleted successfully.", "success");
       fetchEvents();
     } catch (err) {
@@ -193,10 +197,9 @@ export default function AdminEvents() {
         <div
           className={`
             fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-sm
-            ${
-              toast.type === "success"
-                ? "bg-green-600"
-                : toast.type === "error"
+            ${toast.type === "success"
+              ? "bg-green-600"
+              : toast.type === "error"
                 ? "bg-red-600"
                 : "bg-cyan-600"
             }

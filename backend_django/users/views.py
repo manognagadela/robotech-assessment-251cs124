@@ -9,7 +9,7 @@ from .serializers import (
     UserSerializer, RoleSerializer, MemberProfileSerializer, 
     SigSerializer, ProfileFieldDefinitionSerializer, TeamPositionSerializer, AuditLogSerializer
 )
-from .permissions import IsWebLead
+from .permissions import GlobalPermission
 import json
 
 User = get_user_model()
@@ -32,19 +32,12 @@ def log_audit(request, event, target, details=""):
 class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AuditLog.objects.all()
     serializer_class = AuditLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        # Only allow Web Lead or Security Managers
-        user = self.request.user
-        if user.role == 'WEB_LEAD' or user.user_roles.filter(can_manage_security=True).exists():
-            return AuditLog.objects.all()
-        return AuditLog.objects.none()
+    permission_classes = [GlobalPermission]
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsWebLead] # Or check 'can_manage_users'
+    permission_classes = [GlobalPermission]
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -54,10 +47,8 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({"error": "Username and password required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = User.objects.create_user(username=username, password=password, email=data.get('email', ''))
-            
-            # Audit
+            # role logic removed as per structure-driven RBAC request
             log_audit(request, "USER_CREATED", f"Created user {username}")
-
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -174,7 +165,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [IsWebLead]
+    permission_classes = [GlobalPermission]
 
     def perform_create(self, serializer):
         r = serializer.save()
@@ -193,7 +184,7 @@ class RoleViewSet(viewsets.ModelViewSet):
 class SigViewSet(viewsets.ModelViewSet):
     queryset = Sig.objects.all()
     serializer_class = SigSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [GlobalPermission]
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -204,19 +195,41 @@ class SigViewSet(viewsets.ModelViewSet):
              log_audit(request, "SIG_RENAMED", f"Renamed SIG {old} to {res.data['name']}")
         return res
 
+    @action(detail=False, methods=['post'], url_path='reorder-sigs')
+    def reorder_sigs(self, request):
+        items = request.data.get('items', [])
+        with transaction.atomic():
+            for item in items:
+                 uid = item.get('id')
+                 order = item.get('order')
+                 if uid and order is not None:
+                     Sig.objects.filter(id=uid).update(order=order)
+        return Response({"status": "updated"})
+
 class TeamPositionViewSet(viewsets.ModelViewSet):
     queryset = TeamPosition.objects.all()
     serializer_class = TeamPositionSerializer
-    permission_classes = [IsWebLead]
+    permission_classes = [GlobalPermission]
 
 class ProfileFieldViewSet(viewsets.ModelViewSet):
     queryset = ProfileFieldDefinition.objects.all()
     serializer_class = ProfileFieldDefinitionSerializer
-    permission_classes = [IsWebLead]
+    permission_classes = [GlobalPermission]
     
     def perform_create(self, serializer):
         f = serializer.save()
         log_audit(self.request, "FIELD_CREATED", f"Def field {f.label}")
+
+    @action(detail=False, methods=['post'], url_path='reorder-fields')
+    def reorder_fields(self, request):
+        items = request.data.get('items', [])
+        with transaction.atomic():
+            for item in items:
+                 uid = item.get('id')
+                 order = item.get('order')
+                 if uid and order is not None:
+                     ProfileFieldDefinition.objects.filter(id=uid).update(order=order)
+        return Response({"status": "updated"})
 
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -229,9 +242,6 @@ class UserProfileView(APIView):
         data = request.data
         profile, _ = MemberProfile.objects.get_or_create(user=user)
         
-        # Self-update profile logic (omitted fields like role/permissions)
-        # ... (mostly same as before) ...
-        # Simplified copy for brevity
         def set_if(field):
             if field in data: setattr(profile, field, data[field])
         

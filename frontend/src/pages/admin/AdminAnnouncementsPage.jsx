@@ -27,8 +27,8 @@ export default function AdminAnnouncementsPage() {
   async function fetchAnnouncements() {
     try {
       setLoading(true);
-      const res = await api.get("/admin/announcements");
-      setAnnouncements(res.data);
+      const res = await api.get("/announcements/");
+      setAnnouncements(res.data.results || res.data);
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function AdminAnnouncementsPage() {
 
     try {
       setDeleting(true);
-      await api.delete(`/admin/announcements/${deleteId}`);
+      await api.delete(`/announcements/${deleteId}/`);
       setDeleteId(null);
       fetchAnnouncements();
       showToast("Announcement deleted successfully.", "success");
@@ -74,6 +74,12 @@ export default function AdminAnnouncementsPage() {
       setDeleting(false);
     }
   };
+
+  // ... inside render ... 
+  // Update publish URL
+  // <button onClick={() => api.post(`/announcements/${a.id}/publish/`).then(fetchAnnouncements)} ... >  (I can't replace inside JSX with this block)
+  // I will replace the fetch and delete blocks first. Then handle publish in another call or include it here if contiguous? 
+  // The jsx is further down. I'll stick to function definitions first.
 
   /* ================= UI ================= */
 
@@ -182,7 +188,7 @@ export default function AdminAnnouncementsPage() {
                   <button
                     onClick={() =>
                       api
-                        .post(`/admin/announcements/${a.id}/publish`)
+                        .post(`/announcements/${a.id}/publish/`)
                         .then(fetchAnnouncements)
                     }
                     className="
@@ -267,10 +273,9 @@ export default function AdminAnnouncementsPage() {
         <div
           className={`
             fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-sm
-            ${
-              toast.type === "success"
-                ? "bg-green-600"
-                : toast.type === "error"
+            ${toast.type === "success"
+              ? "bg-green-600"
+              : toast.type === "error"
                 ? "bg-red-600"
                 : "bg-cyan-600"
             }
