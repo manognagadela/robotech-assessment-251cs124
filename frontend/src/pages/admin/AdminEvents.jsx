@@ -129,6 +129,19 @@ export default function AdminEvents() {
                 Registration:{" "}
                 {e.registration_enabled ? "Enabled" : "Disabled"}
               </p>
+              <div className="mt-2 flex flex-wrap gap-4 text-xs">
+                <p className="text-gray-300">
+                  📅 {e.event_date ? new Date(e.event_date).toLocaleString() : "Date TBD"}
+                </p>
+                {e.due_date && (
+                  <p className="text-red-300">
+                    ⏰ Due: {new Date(e.due_date).toLocaleString()}
+                  </p>
+                )}
+                <p className="text-gray-500">
+                  Added by: <span className="text-cyan-400">{e.creator_email || "System"}</span>
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-4">

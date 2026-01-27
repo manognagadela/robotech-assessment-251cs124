@@ -1,4 +1,5 @@
 import { useNavigate, useOutletContext } from "react-router-dom";
+import api from "../../api/axios";
 import { useState, useEffect } from "react";
 import {
   Activity,
@@ -26,6 +27,13 @@ export default function AdminDashboard() {
   // Safely get context
   const context = useOutletContext();
   const user = context?.user;
+  const [recentEvents, setRecentEvents] = useState([]);
+
+  useEffect(() => {
+    api.get("/events/?limit=5").then(res => {
+      setRecentEvents(res.data.results || res.data || []);
+    }).catch(err => console.error("Failed to load events", err));
+  }, []);
 
   /* ================= PERMISSION HELPER ================= */
   const hasPermission = (perm) => {
@@ -38,16 +46,60 @@ export default function AdminDashboard() {
     <div className="animate-fade-in pb-12">
 
       {/* ===== HEADER ===== */}
-      <div className="mb-12 relative overflow-hidden p-8 rounded-3xl bg-gradient-to-br from-cyan-900/10 via-transparent to-blue-900/10 border border-white/5">
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="mb-8 p-6 rounded-2xl bg-[#0F0F12] border border-white/5 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shadow-xl">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">Overview</h1>
+          <p className="text-gray-400">
+            Welcome back, <span className="text-white font-medium">{user?.profile?.full_name || user?.username || "Admin"}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs font-mono text-green-400 uppercase">System Online</span>
+        </div>
+      </div>
 
-        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 font-[Orbitron] tracking-tight">
-          System Overview
-        </h1>
-        <p className="text-gray-400 mt-3 text-lg font-medium opacity-80">
-          Welcome back, <span className="text-cyan-400 font-bold">{user?.profile?.full_name || user?.username || "Admin"}</span>.
-        </p>
+      {/* ===== UPCOMING EVENTS WIDGET ===== */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Calendar size={18} className="text-indigo-400" />
+            Club Calendar
+          </h2>
+          <button onClick={() => navigate("/portal/events")} className="text-xs text-indigo-400 hover:text-indigo-300">View All</button>
+        </div>
+
+        <div className="grid gap-3">
+          {recentEvents.length > 0 ? (
+            recentEvents.slice(0, 3).map(event => (
+              <div key={event.id} className="group p-4 rounded-xl bg-[#0F0F12] border border-white/5 hover:border-indigo-500/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-medium text-gray-200 group-hover:text-white transition-colors">{event.title}</h3>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
+                    <span className="flex items-center gap-1">
+                      📅 {event.event_date ? new Date(event.event_date).toLocaleDateString() : "Date TBD"}
+                    </span>
+                    {event.due_date && (
+                      <span className="flex items-center gap-1 text-orange-400/80">
+                        ⏰ Due: {new Date(event.due_date).toLocaleDateString()}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      👤 {event.creator_email || "System"}
+                    </span>
+                  </div>
+                </div>
+                <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider w-fit ${event.visibility === 'PUBLISHED' ? 'bg-green-500/10 text-green-400' : 'bg-white/5 text-gray-400'}`}>
+                  {event.visibility}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 rounded-xl bg-[#0F0F12] border border-white/5 text-center text-gray-500 text-sm">
+              No upcoming events found.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* --- QUICK STATS --- */}

@@ -39,7 +39,9 @@ export async function createEvent(req, res) {
     registration_start,
     registration_end,
     external_links,
-    external_registration_link
+    external_registration_link,
+    event_date,
+    due_date
   } = req.body;
 
   const cleanHtml = sanitizeHtml(full_description, sanitizeConfig);
@@ -63,13 +65,16 @@ export async function createEvent(req, res) {
         created_by,
         external_links,
         external_registration_link,
-        banner_image
+        banner_image,
+        event_date,
+        due_date
       )
       VALUES (
         $1,$2,$3,$4,
         $5,$6,
         $7,$8,$9,
-        $10,$11,$12,$13
+        $10,$11,$12,$13,
+        $14,$15
       )
       RETURNING id`,
     [
@@ -85,7 +90,9 @@ export async function createEvent(req, res) {
       req.admin.id,
       JSON.stringify(links),
       external_registration_link || null,
-      req.file.filename
+      req.file.filename,
+      event_date || null,
+      due_date || null
     ]
   );
 
@@ -108,6 +115,8 @@ export async function updateEvent(req, res) {
 
   if (fields.registration_start === "") fields.registration_start = null;
   if (fields.registration_end === "") fields.registration_end = null;
+  if (fields.event_date === "") fields.event_date = null;
+  if (fields.due_date === "") fields.due_date = null;
 
   if (fields.external_links) {
     fields.external_links =
@@ -144,9 +153,10 @@ export async function updateEvent(req, res) {
    ========================= */
 export async function getAdminEvents(req, res) {
   const { rows } = await pool.query(
-    `SELECT *
-     FROM events
-     ORDER BY display_order DESC, created_at DESC`
+    `SELECT e.*, a.email as creator_email
+     FROM events e
+     LEFT JOIN admins a ON e.created_by = a.id
+     ORDER BY e.display_order DESC, e.created_at DESC`
   );
 
   res.json({ data: rows, total: rows.length });

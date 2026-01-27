@@ -28,7 +28,9 @@ export default function AdminEventForm() {
     registration_start: "",
     registration_end: "",
     external_registration_link: "",
-    external_links: []
+    external_links: [],
+    event_date: "",
+    due_date: ""
   });
 
   const [bannerFile, setBannerFile] = useState(null);
@@ -76,7 +78,9 @@ export default function AdminEventForm() {
         res.data.external_registration_link ?? "",
       external_links: Array.isArray(res.data.external_links)
         ? res.data.external_links
-        : []
+        : [],
+      event_date: res.data.event_date ? res.data.event_date.slice(0, 16) : "",
+      due_date: res.data.due_date ? res.data.due_date.slice(0, 16) : ""
     });
 
     if (res.data.banner_image) {
@@ -221,6 +225,35 @@ export default function AdminEventForm() {
             onChange={updateField}
             className="w-full bg-black/40 border border-white/10 rounded-lg p-3"
           />
+        </section>
+
+        {/* ===== SCHEDULE ===== */}
+        <section className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm text-gray-400 mb-1 block">
+              Event Date/Time
+            </label>
+            <input
+              type="datetime-local"
+              name="event_date"
+              value={form.event_date}
+              onChange={updateField}
+              className="w-full bg-black/40 border border-white/10 rounded-lg p-3"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-400 mb-1 block">
+              Due Date / Deadline (Optional)
+            </label>
+            <input
+              type="datetime-local"
+              name="due_date"
+              value={form.due_date}
+              onChange={updateField}
+              className="w-full bg-black/40 border border-white/10 rounded-lg p-3"
+            />
+          </div>
         </section>
 
         {/* ===== APPEARANCE CONTROL ===== */}
