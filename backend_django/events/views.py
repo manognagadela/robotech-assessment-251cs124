@@ -31,9 +31,8 @@ class EventViewSet(viewsets.ModelViewSet):
         
         if has_perm:
             # Manager: See all events except OTHER people's Personal events
-            return qs.exclude(scope='PERSONAL', lead__isnull=False).exclude(scope='PERSONAL', lead__ne=user) | qs.filter(scope='PERSONAL', lead=user)
+            # Manager: See all events except OTHER people's Personal events
             # Simplified: Exclude Personal events where lead != user
-            # Django syntax: ~Q(scope='PERSONAL') | Q(lead=user)
             return qs.filter(~Q(scope='PERSONAL') | Q(lead=user))
         
         # Standard Member/Lead:
