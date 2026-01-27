@@ -56,6 +56,19 @@ export default function AdminAttendancePage() {
         }
     };
 
+    const handleDelete = async (e, id) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent link navigation
+        if (!window.confirm("Are you sure you want to delete this session?")) return;
+
+        try {
+            await api.delete(`/attendance/sessions/${id}/`);
+            loadData();
+        } catch (err) {
+            alert("Failed to delete session");
+        }
+    };
+
     const toggleSig = (id) => {
         const current = newSession.target_sigs_ids || [];
         if (current.includes(id)) {
@@ -87,9 +100,9 @@ export default function AdminAttendancePage() {
                         <Link
                             to={`/portal/attendance/${sess.id}`}
                             key={sess.id}
-                            className="bg-[#0f111a] border border-white/5 rounded-xl p-6 hover:border-cyan-500/30 transition flex justify-between items-center group"
+                            className="bg-[#0f111a] border border-white/5 rounded-xl p-6 hover:border-cyan-500/30 transition flex justify-between items-center group relative"
                         >
-                            <div>
+                            <div className="flex-1">
                                 <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition">{sess.title}</h3>
                                 <p className="text-sm text-gray-400 mt-1">
                                     {new Date(sess.date).toLocaleDateString()} • {sess.scope_type}
@@ -98,7 +111,7 @@ export default function AdminAttendancePage() {
                             </div>
 
                             {/* Stats */}
-                            <div className="flex gap-4 text-center">
+                            <div className="flex items-center gap-6 text-center mr-8">
                                 <div>
                                     <div className="text-2xl font-bold text-white">{sess.stats.present}</div>
                                     <div className="text-[10px] text-gray-500 uppercase tracking-wider">Present</div>
@@ -112,6 +125,14 @@ export default function AdminAttendancePage() {
                                     <div className="text-[10px] text-yellow-500/50 uppercase tracking-wider">Total</div>
                                 </div>
                             </div>
+
+                            <button
+                                onClick={(e) => handleDelete(e, sess.id)}
+                                className="text-gray-600 hover:text-red-500 p-2 transition absolute top-4 right-4"
+                                title="Delete Session"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                            </button>
                         </Link>
                     ))}
 

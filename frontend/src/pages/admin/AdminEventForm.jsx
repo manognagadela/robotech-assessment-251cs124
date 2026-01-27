@@ -80,33 +80,41 @@ export default function AdminEventForm() {
 
     setForm({
       title: res.data.title ?? "",
-      short_description: res.data.short_description ?? "",
-      full_description: res.data.full_description ?? "",
-      venue: res.data.venue ?? "",
+      // Backend uses 'description' as text field. We'll put it in full_description for now.
+      // Ideally backend should have short/full separation or we just use one.
+      // Based on model review: model has 'description' (TextField).
+      // We will assume 'description' is the full description and short is just a snippet or separate if we added it (we didn't).
+      // Let's split it or just use one.
+      // Strategy: Use 'description' for full_description. 
+      // short_description is NOT in model.
+      short_description: "",
+      full_description: res.data.description ?? "",
+
+      venue: res.data.location ?? "", // Model uses 'location'
       visibility: res.data.visibility ?? "DRAFT",
       display_order: res.data.display_order ?? 0,
-      registration_enabled: !!res.data.registration_enabled,
-      registration_start: res.data.registration_start
-        ? res.data.registration_start.slice(0, 16)
-        : "",
-      registration_end: res.data.registration_end
-        ? res.data.registration_end.slice(0, 16)
-        : "",
-      external_registration_link:
-        res.data.external_registration_link ?? "",
-      external_links: Array.isArray(res.data.external_links)
-        ? res.data.external_links
-        : [],
-      event_date: res.data.event_date ? res.data.event_date.slice(0, 16) : "",
+
+      // Registration fields don't exist in model yet? 
+      // Model has: registration_link. 
+      // Missing: registration_enabled, registration_start, registration_end, external_links.
+      // We will map 'registration_link' <-> 'external_registration_link'.
+      registration_enabled: !!res.data.registration_link,
+      registration_start: "",
+      registration_end: "",
+
+      external_registration_link: res.data.registration_link ?? "",
+      external_links: [],
+
+      event_date: res.data.date ? res.data.date.slice(0, 16) : "",
       due_date: res.data.due_date ? res.data.due_date.slice(0, 16) : "",
       scope: res.data.scope ?? "GLOBAL",
       sig: res.data.sig ?? "",
       is_full_event: res.data.is_full_event ?? true
     });
 
-    if (res.data.banner_image) {
+    if (res.data.image) {
       setBannerPreview(
-        buildMediaUrl(`/media/events/${res.data.banner_image}`)
+        buildMediaUrl(res.data.image)
       );
     }
   }
@@ -183,15 +191,27 @@ export default function AdminEventForm() {
       setStatus("saving");
 
       const fd = new FormData();
-      Object.entries(form).forEach(([key, value]) => {
-        fd.append(
-          key,
-          key === "external_links" ? JSON.stringify(value) : value
-        );
-      });
+
+      // Map form fields to backend model fields
+      fd.append('title', form.title);
+      fd.append('description', form.full_description || form.short_description); // Model only has 'description'
+      fd.append('location', form.venue); // Model has 'location', form has 'venue'
+      fd.append('date', form.event_date);
+      if (form.due_date) fd.append('due_date', form.due_date);
+
+      fd.append('scope', form.scope);
+      if (form.sig) fd.append('sig', form.sig);
+      if (form.is_full_event !== undefined) fd.append('is_full_event', form.is_full_event);
+
+      fd.append('visibility', form.visibility);
+      // Status defaults to UPCOMING, not in form yet but safe default in model.
+
+      if (form.external_registration_link) {
+        fd.append('registration_link', form.external_registration_link);
+      }
 
       if (bannerFile) {
-        fd.append("banner", bannerFile);
+        fd.append("image", bannerFile); // Model has 'image', form has 'banner'
       }
 
       if (isEdit) {
