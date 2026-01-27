@@ -104,7 +104,22 @@ class GlobalPermission(permissions.BasePermission):
         if not flag:
             return False # Strictly deny unmapped write actions
             
-        return check_flag(flag)
+        if check_flag(flag):
+            return True
+            
+        # 6. 'can_manage_content' Super-flag (Content CMS)
+        content_related_flags = [
+            'can_manage_events',
+            'can_manage_announcements',
+            'can_manage_gallery',
+            'can_manage_sponsorship',
+            'can_manage_messages',
+            'can_manage_forms'
+        ]
+        if flag in content_related_flags and check_flag('can_manage_content'):
+            return True
+            
+        return False
 
     def has_object_permission(self, request, view, obj):
         return self.has_permission(request, view)
