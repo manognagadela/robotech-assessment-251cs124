@@ -26,7 +26,7 @@ export default function AdminAttendancePage() {
         try {
             const [sRes, sigRes] = await Promise.all([
                 api.get("/attendance/sessions/"),
-                api.get("/custom-sigs/") // Assuming SIGs endpoint
+                api.get("/sigs/")
             ]);
             setSessions(sRes.data);
             setSigOptions(sigRes.data);
@@ -57,7 +57,7 @@ export default function AdminAttendancePage() {
     };
 
     const toggleSig = (id) => {
-        const current = newSession.target_sigs_ids;
+        const current = newSession.target_sigs_ids || [];
         if (current.includes(id)) {
             setNewSession({ ...newSession, target_sigs_ids: current.filter(x => x !== id) });
         } else {
@@ -187,8 +187,8 @@ export default function AdminAttendancePage() {
                                                 type="button"
                                                 onClick={() => toggleSig(sig.id)}
                                                 className={`px-3 py-1 rounded-full text-xs font-bold border transition ${newSession.target_sigs_ids.includes(sig.id)
-                                                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
-                                                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                                    ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
+                                                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                                     }`}
                                             >
                                                 {sig.name}

@@ -76,8 +76,10 @@ export default function AdminUsersPage() {
             branch: user.profile?.branch || "",
             branch: user.profile?.branch || "",
             // sig: user.profile?.sig || "", // Legacy
-            sigs: user.profile?.sigs || [], // Array of IDs if serializer sends it, OR we need to fetch it. 
-            // NOTE: The current serializer `MemberProfileSerializer` uses __all__, so `sigs` field should be present (list of IDs).
+            // Ensure sigs is array of IDs for the form state
+            sigs: user.profile?.sigs
+                ? user.profile.sigs.map(s => (typeof s === 'object' ? s.id : s))
+                : [],
             is_active: user.is_active,
             is_active: user.is_active,
             is_public: user.profile?.is_public !== false,
