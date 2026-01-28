@@ -38,6 +38,16 @@ export default function AdminFormsPage() {
         }
     };
 
+    const handleDeleteForm = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this form? This action cannot be undone.")) return;
+        try {
+            await api.delete(`/forms/${id}/`);
+            setForms(forms.filter(f => f.id !== id));
+        } catch (err) {
+            alert("Failed to delete form");
+        }
+    };
+
     return (
         <div className="p-6 md:p-10 max-w-7xl mx-auto text-white">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
@@ -108,6 +118,13 @@ export default function AdminFormsPage() {
                                     className="flex-1 py-2 border border-white/5 hover:border-white/20 rounded-lg text-[10px] text-gray-500 hover:text-white transition font-black uppercase tracking-widest"
                                 >
                                     Test ↗
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteForm(form.id)}
+                                    className="px-3 py-2 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-500 hover:text-red-400 transition"
+                                    title="Delete Form"
+                                >
+                                    🗑️
                                 </button>
                                 <button
                                     onClick={() => {

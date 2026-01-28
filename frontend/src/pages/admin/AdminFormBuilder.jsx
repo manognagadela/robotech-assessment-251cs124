@@ -28,6 +28,10 @@ export default function AdminFormBuilder() {
     const [loading, setLoading] = useState(true);
 
     // Editor State
+    const [isEditingMeta, setIsEditingMeta] = useState(false);
+    const [editTitle, setEditTitle] = useState("");
+    const [editDescription, setEditDescription] = useState("");
+
     const [newSectionTitle, setNewSectionTitle] = useState("");
     const [activeSectionId, setActiveSectionId] = useState(null);
 
@@ -44,6 +48,8 @@ export default function AdminFormBuilder() {
         try {
             const res = await api.get(`/forms/${id}/`);
             setForm(res.data);
+            setEditTitle(res.data.title);
+            setEditDescription(res.data.description);
             if (res.data.sections?.length > 0 && !activeSectionId) {
                 setActiveSectionId(res.data.sections[0].id);
             }
@@ -59,6 +65,17 @@ export default function AdminFormBuilder() {
             await api.patch(`/forms/${id}/`, { theme });
             fetchForm();
         } catch (err) { alert("Theme update failed"); }
+    };
+
+    const handleUpdateMeta = async () => {
+        try {
+            await api.patch(`/forms/${id}/`, {
+                title: editTitle,
+                description: editDescription
+            });
+            setIsEditingMeta(false);
+            fetchForm();
+        } catch (err) { alert("Failed to update form details"); }
     };
 
     const handleAddSection = async () => {
@@ -140,8 +157,34 @@ export default function AdminFormBuilder() {
             <div className="mb-10 flex flex-col md:flex-row justify-between items-start gap-8">
                 <div className="flex-1">
                     <button onClick={() => navigate("/portal/forms")} className="text-sm text-orange-400 hover:outline mb-4 flex items-center gap-2">← Navigator</button>
-                    <h1 className="text-4xl font-bold font-[Orbitron] text-gray-100">{form.title}</h1>
-                    <p className="text-gray-500 mt-2">{form.description}</p>
+                    {isEditingMeta ? (
+                        <div className="space-y-3 max-w-2xl">
+                            <input
+                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-2xl font-bold font-[Orbitron] text-white focus:border-orange-500 outline-none"
+                                value={editTitle}
+                                onChange={e => setEditTitle(e.target.value)}
+                                placeholder="Form Title"
+                            />
+                            <textarea
+                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-gray-300 focus:border-orange-500 outline-none h-24"
+                                value={editDescription}
+                                onChange={e => setEditDescription(e.target.value)}
+                                placeholder="Description"
+                            />
+                            <div className="flex gap-2">
+                                <button onClick={handleUpdateMeta} className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-xs font-bold uppercase transition">Save Updates</button>
+                                <button onClick={() => setIsEditingMeta(false)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-bold uppercase transition">Cancel</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="group relative">
+                            <h1 className="text-4xl font-bold font-[Orbitron] text-gray-100 flex items-center gap-3">
+                                {form.title}
+                                <button onClick={() => setIsEditingMeta(true)} className="opacity-0 group-hover:opacity-100 text-sm text-gray-500 hover:text-orange-400 transition" title="Edit details">✏️</button>
+                            </h1>
+                            <p className="text-gray-500 mt-2 max-w-2xl">{form.description}</p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
