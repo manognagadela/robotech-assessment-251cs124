@@ -30,7 +30,11 @@ export default function ProjectCard({ project, onOpen }) {
         <h3 className="text-lg font-semibold text-cyan-400">
           {project.title}
         </h3>
-       
+        {project.lead_details && (
+          <p className="text-xs text-gray-400 mt-1">
+            Lead: <span className="text-gray-300">{project.lead_details.profile?.full_name || project.lead_details.username}</span>
+          </p>
+        )}
       </div>
 
       {/* SEE BUTTON */}

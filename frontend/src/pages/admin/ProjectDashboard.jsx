@@ -91,7 +91,25 @@ export default function ProjectDashboard() {
     if (loading) return <div className="p-10 text-center text-cyan-500 animate-pulse">Initializing Workspace...</div>;
     if (!project) return null;
 
-    const isMember = project.members.includes(user.id) || project.lead === user.id;
+    const isMember = project.members.includes(user.id) || project.lead === user.id || user.is_superuser;
+
+    if (!isMember) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center p-6">
+                <div className="bg-white/5 border border-white/10 p-8 rounded-xl max-w-md w-full text-center space-y-6">
+                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    </div>
+                    <h2 className="text-2xl font-bold font-[Orbitron] text-white">Restricted Access</h2>
+                    <p className="text-gray-400">This workspace is restricted to team members only.</p>
+
+                    <RequestAccessButton project={project} user={user} />
+
+                    <button onClick={() => navigate("/portal/projects")} className="text-sm text-cyan-400 hover:underline block w-full pt-4">← Back to Overview</button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="text-white">
@@ -463,16 +481,32 @@ function TeamTab({ project, user, allUsers, onUpdate }) {
                 <h3 className="text-sm font-bold text-gray-500 uppercase mb-6 tracking-widest flex justify-between items-center">
                     Active Personnel
                     {isLead && (
-                        <select
-                            className="bg-white/5 border border-white/10 rounded text-[10px] font-bold uppercase p-1 outline-none hover:border-cyan-500 transition-all"
-                            onChange={(e) => handleAddMember(e.target.value)}
-                            value=""
-                        >
-                            <option value="">+ Manually Enroll</option>
-                            {allUsers.filter(u => !project.members?.includes(u.id) && u.id !== project.lead).map(u => (
-                                <option key={u.id} value={u.id}>{u.username}</option>
-                            ))}
-                        </select>
+                        <div className="flex gap-2">
+                            <input
+                                placeholder="Search users..."
+                                className="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] text-white outline-none focus:border-cyan-500 w-32 transition-all"
+                                onChange={(e) => {
+                                    const val = e.target.value.toLowerCase();
+                                    const select = document.getElementById('user-select');
+                                    Array.from(select.options).forEach(opt => {
+                                        if (opt.value === "") return;
+                                        const text = opt.text.toLowerCase();
+                                        opt.style.display = text.includes(val) ? 'block' : 'none';
+                                    });
+                                }}
+                            />
+                            <select
+                                id="user-select"
+                                className="bg-white/5 border border-white/10 rounded text-[10px] font-bold uppercase p-1 outline-none hover:border-cyan-500 transition-all w-40"
+                                onChange={(e) => handleAddMember(e.target.value)}
+                                value=""
+                            >
+                                <option value="">+ Add Member</option>
+                                {allUsers.filter(u => !project.members?.includes(u.id) && u.id !== project.lead).map(u => (
+                                    <option key={u.id} value={u.id}>{u.username}</option>
+                                ))}
+                            </select>
+                        </div>
                     )}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -557,8 +591,19 @@ function ManagementTab({ project, allUsers, onUpdate }) {
     const handleUpdate = async (e) => {
         e.preventDefault();
         setSaving(true);
+
+        const fd = new FormData();
+        Object.keys(data).forEach(key => {
+            if (key === 'cover_image' && data[key] instanceof File) {
+                fd.append('cover_image', data[key]);
+            } else if (key !== 'cover_image' && key !== 'lead_details' && key !== 'members_details' && key !== 'tasks' && key !== 'threads' && key !== 'join_requests') {
+                // Exclude nested objects read_only
+                fd.append(key, data[key]);
+            }
+        });
+
         try {
-            await api.patch(`/projects/${project.id}/`, data);
+            await api.patch(`/projects/${project.id}/`, fd);
             onUpdate();
             alert("Sector parameters updated successfully.");
         } catch (err) { alert("Failed"); }
@@ -594,14 +639,19 @@ function ManagementTab({ project, allUsers, onUpdate }) {
                 <div><label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Classification</label>
                     <div className="flex items-center gap-6">
                         <label className="flex items-center gap-2 cursor-pointer bg-white/5 px-4 py-2 rounded border border-white/10 hover:border-cyan-500 transition-all">
-                            <input type="checkbox" checked={data.is_public} onChange={e => setData({ ...data, is_public: e.target.checked })} className="accent-cyan-500" />
+                            <input type="checkbox" checked={data.is_public === true} onChange={e => setData({ ...data, is_public: e.target.checked })} className="accent-cyan-500" />
                             <span className="text-xs font-bold uppercase">Public Visibility</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer bg-white/5 px-4 py-2 rounded border border-white/10 hover:border-cyan-500 transition-all">
-                            <input type="checkbox" checked={data.is_open_source} onChange={e => setData({ ...data, is_open_source: e.target.checked })} className="accent-cyan-500" />
+                            <input type="checkbox" checked={data.is_open_source === true} onChange={e => setData({ ...data, is_open_source: e.target.checked })} className="accent-cyan-500" />
                             <span className="text-xs font-bold uppercase">Open Source Repository</span>
                         </label>
                     </div>
+                </div>
+
+                <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Cover Image (Landing Page)</label>
+                    <input type="file" onChange={e => setData({ ...data, cover_image: e.target.files[0] })} className="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" />
                 </div>
 
                 <div className="pt-6 flex justify-between items-center">
@@ -615,4 +665,38 @@ function ManagementTab({ project, allUsers, onUpdate }) {
             </form>
         </div>
     )
+}
+function RequestAccessButton({ project, user }) {
+    const existing = project.join_requests?.find(r => r.user === user.id);
+    const [status, setStatus] = useState(existing ? existing.status : null);
+    const [msg, setMsg] = useState("");
+    const [sending, setSending] = useState(false);
+
+    if (status === 'PENDING') return <div className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-500 p-3 rounded font-bold text-sm">REQUEST SENT - AWAITING APPROVAL</div>;
+    if (status === 'REJECTED') return <div className="bg-red-500/20 border border-red-500/50 text-red-500 p-3 rounded font-bold text-sm">ACCESS DENIED</div>;
+    if (status === 'APPROVED') return <div className="text-green-500">Access Granted! Please refresh.</div>;
+
+    const handleSend = async () => {
+        setSending(true);
+        try {
+            await api.post(`/projects/${project.id}/request_join/`, { message: msg });
+            setStatus('PENDING');
+        } catch (err) {
+            alert(err.response?.data?.error || "Failed");
+        } finally { setSending(false); }
+    };
+
+    return (
+        <div className="space-y-4">
+            <textarea
+                className="w-full bg-black/40 border border-white/10 rounded p-3 text-sm text-white focus:border-cyan-500"
+                placeholder="State your purpose for access..."
+                value={msg}
+                onChange={e => setMsg(e.target.value)}
+            />
+            <button disabled={sending} onClick={handleSend} className="bg-cyan-600 hover:bg-cyan-500 text-white w-full py-2 rounded font-bold uppercase transition">
+                {sending ? 'Transmitting...' : 'Request Clearance'}
+            </button>
+        </div>
+    );
 }
