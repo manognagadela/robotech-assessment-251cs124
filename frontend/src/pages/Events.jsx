@@ -7,7 +7,6 @@ import Footer from "../components/Footer";
 export default function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
     fetchEvents();
@@ -15,18 +14,13 @@ export default function Events() {
 
   async function fetchEvents() {
     try {
-      const res = await api.get("/events");
-      setEvents(res.data);
+      const res = await api.get("/events/");
+      setEvents(res.data.results || res.data);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  }
-
-  function toggleExpand(id) {
-    setExpanded(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
   }
 
   if (loading) {
@@ -64,148 +58,35 @@ export default function Events() {
       {/* ================= CONTENT ================= */}
       <main className="text-white pt-28  relative z-10">
         <div className="max-w-6xl mx-auto px-6 space-y-24">
-          {events.map(event => {
-            const isOpen = expanded[event.id];
-
-            return (
-              <article
-                key={event.id}
-                className="
-                  rounded-2xl overflow-hidden
-                  bg-neutral-950/90
-                 
-                  shadow-xl
-                "
-              >
-                {/* ================= BANNER ================= */}
-                {event.banner_image && (
-                  <div className="relative h-[460px]">
-                    <img
-                      src={buildMediaUrl(
-                        `/media/events/${event.banner_image}`
-                      )}
-                      alt={event.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/60" />
-
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <h2 className="text-3xl sm:text-4xl font-bold text-cyan-400">
-                        {event.title}
-                      </h2>
-
-                      {event.venue && (
-                        <p className="text-sm text-gray-300 mt-1">
-                          📍 {event.venue}
-                        </p>
-                      )}
-                    </div>
+          {events.map(event => (
+            <article key={event.id} className="rounded-2xl overflow-hidden bg-neutral-900/90 shadow-xl border border-white/10 flex flex-col md:flex-row">
+              <div className="md:w-1/3 h-64 md:h-auto relative bg-black/50">
+                {event.image ? (
+                  <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-600 font-bold tracking-widest">ROBOTECH</div>
+                )}
+                <div className="absolute top-4 left-4 bg-cyan-500 text-black font-bold px-3 py-1 rounded text-sm shadow-lg">
+                  {new Date(event.date).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                </div>
+              </div>
+              <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">{event.title}</h2>
+                  {event.location && <p className="text-cyan-400 text-sm mb-4 font-semibold tracking-wide">📍 {event.location}</p>}
+                  {event.description && <div className="text-gray-300 leading-relaxed mb-6 prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: event.description }}></div>}
+                </div>
+                {event.registration_link && (
+                  <div className="mt-auto pt-4">
+                    <a href={event.registration_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold px-8 py-3 rounded-xl transition shadow-lg shadow-cyan-500/20 transform hover:-translate-y-1">
+                      Register Now <i className="fa-solid fa-arrow-right"></i>
+                    </a>
                   </div>
                 )}
-
-                {/* ================= CONTENT ================= */}
-                <div className="p-6 sm:p-10 space-y-6">
-                  {/* SHORT DESCRIPTION + REGISTER CTA */}
-                  {event.short_description && (
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6">
-                      <p className="text-lg text-gray-300 flex-1">
-                        {event.short_description}
-                      </p>
-
-                      {event.registration_open &&
-                        event.external_registration_link && (
-                          <a
-                            href={event.external_registration_link}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="
-                              shrink-0
-                              inline-flex items-center justify-center
-                              bg-cyan-500 hover:bg-cyan-600
-                              text-black font-semibold
-                              px-6 py-3
-                              rounded-xl
-                              transition
-                              mt-4 sm:mt-0
-                            "
-                          >
-                            Register Now
-                          </a>
-                        )}
-                    </div>
-                  )}
-
-                  {/* READ MORE BUTTON */}
-                  {(event.full_description ||
-                    event.external_links?.length > 0) && (
-                    <button
-                      onClick={() => toggleExpand(event.id)}
-                      className="text-cyan-400 hover:underline text-sm"
-                    >
-                      {isOpen ? "Show less ↑" : "Read more ↓"}
-                    </button>
-                  )}
-
-                  {/* ================= EXPANDABLE SECTION ================= */}
-                  <div
-                    className={`
-                      transition-all duration-300 ease-in-out
-                      overflow-hidden
-                      ${isOpen ? "max-h-[6000px] opacity-100" : "max-h-0 opacity-0"}
-                    `}
-                  >
-                    <div className="pt-6 space-y-8">
-                      {/* Full description */}
-                      {event.full_description && (
-                        <div
-                          className="
-                            prose prose-invert max-w-none
-                            prose-p:text-gray-300
-                            prose-a:text-cyan-400
-                            prose-strong:text-white
-                          "
-                          dangerouslySetInnerHTML={{
-                            __html: event.full_description
-                          }}
-                        />
-                      )}
-
-                      {/* External Links */}
-                      {event.external_links?.length > 0 && (
-                        <div>
-                          <h3 className="text-lg font-semibold mb-3">
-                            Related Links
-                          </h3>
-                          <ul className="space-y-2">
-                            {event.external_links.map((link, i) => (
-                              <li key={i}>
-                                <a
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-cyan-400 hover:underline"
-                                >
-                                  🔗 {link.label}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-
-          {!events.length && (
-            <p className="text-center text-gray-500">
-              No events available.
-            </p>
-          )}
+              </div>
+            </article>
+          ))}
+          {!events.length && <div className="text-center py-20 text-gray-500 text-xl">No upcoming events found.</div>}
         </div>
       </main>
 

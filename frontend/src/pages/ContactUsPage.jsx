@@ -96,7 +96,7 @@ export default function ContactUs() {
         <section className="text-center px-6 mb-20" data-aos="fade-down">
           <h1 className="text-5xl font-bold mb-3">Contact Us</h1>
           <p className="text-gray-300 max-w-2xl mx-auto text-lg">
-            Have questions or want to collaborate? Reach out to the Robotech Club
+            Have questions or want to collaborate? Reach out to Robotech NITK
             — we’d love to hear from you!
           </p>
         </section>
@@ -107,7 +107,7 @@ export default function ContactUs() {
             <i className="fa-solid fa-location-dot text-3xl text-indigo-400 mb-3"></i>
             <h3 className="text-xl font-semibold mb-2">Our Address</h3>
             <p className="text-gray-300 text-sm">
-              Robotech Club, NITK Surathkal
+              Robotech NITK, NITK Surathkal
               <br />
               Mangalore, Karnataka – 575025
             </p>
@@ -123,11 +123,7 @@ export default function ContactUs() {
             </p>
           </div>
 
-          <div className="glass-card p-6 text-center" data-aos="zoom-in" data-aos-delay="200">
-            <i className="fa-solid fa-phone text-3xl text-indigo-400 mb-3"></i>
-            <h3 className="text-xl font-semibold mb-2">Call Us</h3>
-            <p className="text-gray-300 text-sm">+91 98765 43210</p>
-          </div>
+
         </section>
 
         {/* Contact Form */}
