@@ -43,6 +43,10 @@ class GlobalPermission(permissions.BasePermission):
         if view_name in public_post_views and request.method == 'POST':
             return True
             
+        # Allow specific public actions (like active_public on Recruitment)
+        if getattr(view, 'action', None) == 'active_public':
+            return True
+
         if view_name in public_read_views and request.method in permissions.SAFE_METHODS:
             return True
 
