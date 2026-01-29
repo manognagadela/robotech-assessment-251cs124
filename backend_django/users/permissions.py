@@ -110,6 +110,9 @@ class GlobalPermission(permissions.BasePermission):
             'QuizAttemptViewSet': 'can_manage_forms',
         }
 
+        if view_name == 'UserViewSet' and request.method in permissions.SAFE_METHODS:
+            return True
+
         flag = perm_map.get(view_name)
         if not flag:
             return False # Strictly deny unmapped write actions
