@@ -121,6 +121,9 @@ export default function AdminUsersPage() {
         return form.sigs && form.sigs.includes(f.limit_to_sig);
     });
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
+
     // Derived Users
     const filteredUsers = users.filter(u => {
         const lowerSearch = search.toLowerCase();
@@ -129,8 +132,8 @@ export default function AdminUsersPage() {
             u.email.toLowerCase().includes(lowerSearch);
 
         const matchesRole = filterRole ? (u.user_roles?.some(r => r.name === filterRole) || u.role === filterRole) : true;
-        // Filter by SIG (check if user has the sig)
-        // Note: user.profile.sigs is list of IDs. filterSig is likely ID or Name. Let's use ID.
+
+        // Filter by SIG (ID check)
         const matchesSig = filterSig ? u.profile?.sigs?.some(s => s.id === parseInt(filterSig)) : true;
 
         return matchesSearch && matchesRole && matchesSig;
@@ -140,11 +143,49 @@ export default function AdminUsersPage() {
         return 0;
     });
 
+    // Pagination Logic
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+    // Reset page on filter change
+    useEffect(() => { setCurrentPage(1); }, [search, filterRole, filterSig, sortBy]);
+
+    const downloadCSV = () => {
+        if (filteredUsers.length === 0) return alert("No users to export");
+
+        const headers = ["Username", "Full Name", "Email", "Role", "Position", "SIGs", "Projects Led", "Projects Member", "Join Year", "Status"];
+        const rows = filteredUsers.map(u => [
+            u.username,
+            u.profile?.full_name || "",
+            u.email,
+            u.user_roles?.map(r => r.name).join(", ") || "",
+            u.profile?.position || "",
+            u.profile?.sigs ? u.profile.sigs.map(s => sigs.find(x => x.id === s)?.name || s).join(", ") : "",
+            u.projects_info?.led?.map(p => p.title).join("; ") || "",
+            u.projects_info?.member?.map(p => p.title).join("; ") || "",
+            u.profile?.year_of_joining || "",
+            u.is_active ? "Active" : "Inactive"
+        ]);
+
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + [headers.join(","), ...rows.map(e => e.map(s => `"${String(s).replace(/"/g, '""')}"`).join(","))].join("\n");
+
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", "robotech_users.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="p-4 sm:p-6 max-w-7xl mx-auto text-white">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold font-[Orbitron] text-cyan-400">User Management</h1>
                 <div className="flex gap-2">
+                    <button onClick={downloadCSV} className="bg-green-500/20 text-green-400 border border-green-500/50 px-4 py-2 rounded text-sm hover:bg-green-500/30">⬇ CSV</button>
                     <button onClick={() => navigate("/portal/taxonomy")} className="bg-white/10 px-4 py-2 rounded text-sm hover:bg-white/20">⚙️ Structure</button>
                     <button onClick={() => { setIsEditing(false); setFormOpen(true); setForm({ ...form, username: "", password: "" }); }} className="bg-cyan-500 px-4 py-2 rounded text-black font-bold">+ New User</button>
                 </div>
@@ -178,7 +219,7 @@ export default function AdminUsersPage() {
                         <tr><th className="p-4">User</th><th className="p-4">Role/Position</th><th className="p-4">Last Access</th><th className="p-4 text-right">Action</th></tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
-                        {filteredUsers.map(u => (
+                        {currentUsers.map(u => (
                             <tr key={u.id} className="hover:bg-white/5">
                                 <td className="p-4 flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-cyan-900 flex items-center justify-center text-xs">{u.username[0]}</div>
@@ -217,6 +258,16 @@ export default function AdminUsersPage() {
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* PAGINATION */}
+            <div className="flex justify-between items-center mt-4 text-sm text-gray-400">
+                <div>Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredUsers.length)} of {filteredUsers.length}</div>
+                <div className="flex gap-2">
+                    <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 bg-white/5 rounded hover:bg-white/10 disabled:opacity-30">Prev</button>
+                    <span className="px-2 py-1">Page {currentPage} of {totalPages || 1}</span>
+                    <button disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 bg-white/5 rounded hover:bg-white/10 disabled:opacity-30">Next</button>
+                </div>
             </div>
 
             {/* MODAL */}

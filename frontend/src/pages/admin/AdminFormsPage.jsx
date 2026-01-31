@@ -48,6 +48,41 @@ export default function AdminFormsPage() {
         }
     };
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 9; // 3x3 grid
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentForms = forms.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(forms.length / itemsPerPage);
+
+    // Reset to page 1 if forms change drastically (optional)
+    useEffect(() => { if (currentPage > totalPages && totalPages > 0) setCurrentPage(1); }, [forms.length, totalPages, currentPage]);
+
+    const downloadCSV = () => {
+        if (forms.length === 0) return alert("No forms to export");
+        const headers = ["Title", "Description", "Theme", "Created At", "Closes At", "Active", "Response Count"];
+        const rows = forms.map(f => [
+            f.title,
+            f.description || "",
+            f.theme,
+            new Date(f.created_at).toLocaleString(),
+            f.closes_at ? new Date(f.closes_at).toLocaleString() : "Never",
+            f.is_active ? "Yes" : "No",
+            f.response_count
+        ]);
+
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + [headers.join(","), ...rows.map(e => e.map(s => `"${String(s).replace(/"/g, '""')}"`).join(","))].join("\n");
+
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", "robotech_forms.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="p-6 md:p-10 max-w-7xl mx-auto text-white">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
@@ -58,12 +93,15 @@ export default function AdminFormsPage() {
                     </h1>
                     <p className="text-gray-400 mt-2">Create and manage recruitment, surveys, or feedback forms.</p>
                 </div>
-                <button
-                    onClick={() => setIsAdding(true)}
-                    className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-orange-600/20"
-                >
-                    + Create New Form
-                </button>
+                <div className="flex gap-3">
+                    <button onClick={downloadCSV} className="bg-green-500/20 text-green-400 border border-green-500/50 px-4 py-3 rounded-xl font-bold hover:bg-green-500/30 transition">⬇ CSV</button>
+                    <button
+                        onClick={() => setIsAdding(true)}
+                        className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-orange-600/20"
+                    >
+                        + Create New Form
+                    </button>
+                </div>
             </div>
 
             {loading ? (
@@ -75,71 +113,83 @@ export default function AdminFormsPage() {
                     <p className="text-gray-500 italic">No forms created yet. Start by deploying a new form.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {forms.map(form => (
-                        <div key={form.id} className="bg-[#111] border border-white/10 rounded-2xl p-6 hover:border-orange-500/50 transition-all flex flex-col group">
-                            <div className="flex justify-between items-start mb-4">
-                                {(() => {
-                                    const isExpired = form.closes_at && new Date(form.closes_at) < new Date();
-                                    const isActive = form.is_active && !isExpired;
-                                    return (
-                                        <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                                            {isActive ? 'Accepting Responses' : isExpired ? 'Deadline Passed' : 'Manually Closed'}
-                                        </span>
-                                    );
-                                })()}
-                                <span className="text-[10px] text-gray-500 font-bold uppercase">{new Date(form.created_at).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-[8px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-gray-400 font-bold uppercase tracking-widest">
-                                    Theme: {form.theme}
-                                </span>
-                            </div>
-                            <h3 className="text-xl font-bold mb-2 group-hover:text-orange-400 transition-colors uppercase font-[Orbitron]">{form.title}</h3>
-                            <p className="text-sm text-gray-500 line-clamp-2 mb-6 h-10">{form.description}</p>
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {currentForms.map(form => (
+                            <div key={form.id} className="bg-[#111] border border-white/10 rounded-2xl p-6 hover:border-orange-500/50 transition-all flex flex-col group">
+                                <div className="flex justify-between items-start mb-4">
+                                    {(() => {
+                                        const isExpired = form.closes_at && new Date(form.closes_at) < new Date();
+                                        const isActive = form.is_active && !isExpired;
+                                        return (
+                                            <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                                                {isActive ? 'Accepting Responses' : isExpired ? 'Deadline Passed' : 'Manually Closed'}
+                                            </span>
+                                        );
+                                    })()}
+                                    <span className="text-[10px] text-gray-500 font-bold uppercase">{new Date(form.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-[8px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-gray-400 font-bold uppercase tracking-widest">
+                                        Theme: {form.theme}
+                                    </span>
+                                </div>
+                                <h3 className="text-xl font-bold mb-2 group-hover:text-orange-400 transition-colors uppercase font-[Orbitron]">{form.title}</h3>
+                                <p className="text-sm text-gray-500 line-clamp-2 mb-6 h-10">{form.description}</p>
 
-                            <div className="grid grid-cols-2 gap-3 mt-auto">
-                                <button
-                                    onClick={() => navigate(`/portal/forms/${form.id}`)}
-                                    className="py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition uppercase"
-                                >
-                                    Build & Edit
-                                </button>
-                                <button
-                                    onClick={() => navigate(`/portal/forms/${form.id}/responses`)}
-                                    className="py-2 bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 rounded-lg text-xs font-bold transition uppercase"
-                                >
-                                    Results ({form.response_count})
-                                </button>
+                                <div className="grid grid-cols-2 gap-3 mt-auto">
+                                    <button
+                                        onClick={() => navigate(`/portal/forms/${form.id}`)}
+                                        className="py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition uppercase"
+                                    >
+                                        Build & Edit
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(`/portal/forms/${form.id}/responses`)}
+                                        className="py-2 bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 rounded-lg text-xs font-bold transition uppercase"
+                                    >
+                                        Results ({form.response_count})
+                                    </button>
+                                </div>
+                                <div className="flex gap-2 mt-3">
+                                    <button
+                                        onClick={() => window.open(`/forms/${form.id}`, '_blank')}
+                                        className="flex-1 py-2 border border-white/5 hover:border-white/20 rounded-lg text-[10px] text-gray-500 hover:text-white transition font-black uppercase tracking-widest"
+                                    >
+                                        Test ↗
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteForm(form.id)}
+                                        className="px-3 py-2 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-500 hover:text-red-400 transition"
+                                        title="Delete Form"
+                                    >
+                                        🗑️
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const url = `${window.location.origin}/forms/${form.id}`;
+                                            navigator.clipboard.writeText(url);
+                                            alert("Link copied to clipboard!");
+                                        }}
+                                        className="flex-1 py-2 bg-cyan-600/10 hover:bg-cyan-600/20 text-cyan-500 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                                    >
+                                        🔗 Share
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex gap-2 mt-3">
-                                <button
-                                    onClick={() => window.open(`/forms/${form.id}`, '_blank')}
-                                    className="flex-1 py-2 border border-white/5 hover:border-white/20 rounded-lg text-[10px] text-gray-500 hover:text-white transition font-black uppercase tracking-widest"
-                                >
-                                    Test ↗
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteForm(form.id)}
-                                    className="px-3 py-2 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-500 hover:text-red-400 transition"
-                                    title="Delete Form"
-                                >
-                                    🗑️
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        const url = `${window.location.origin}/forms/${form.id}`;
-                                        navigator.clipboard.writeText(url);
-                                        alert("Link copied to clipboard!");
-                                    }}
-                                    className="flex-1 py-2 bg-cyan-600/10 hover:bg-cyan-600/20 text-cyan-500 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
-                                >
-                                    🔗 Share
-                                </button>
-                            </div>
+                        ))}
+                    </div>
+
+                    {/* PAGINATION */}
+                    <div className="flex justify-between items-center mt-8 p-4 bg-white/5 rounded-xl border border-white/5">
+                        <div className="text-sm text-gray-400">Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, forms.length)} of {forms.length} forms</div>
+                        <div className="flex items-center gap-3">
+                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-4 py-2 bg-black/50 rounded-lg hover:bg-white/10 disabled:opacity-30 text-xs font-bold uppercase transition">Prev</button>
+                            <span className="text-xs font-bold text-orange-400">Page {currentPage} / {totalPages || 1}</span>
+                            <button disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(p => p + 1)} className="px-4 py-2 bg-black/50 rounded-lg hover:bg-white/10 disabled:opacity-30 text-xs font-bold uppercase transition">Next</button>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                </>
             )}
 
             {isAdding && (
