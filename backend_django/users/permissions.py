@@ -91,6 +91,10 @@ class GlobalPermission(permissions.BasePermission):
         if view_name in ['RecruitmentDriveViewSet', 'TimelineEventViewSet'] and request.method in permissions.SAFE_METHODS:
              return True
 
+        # 7. Delegate specific Project Communication views to their own permissions (IsProjectMember)
+        if view_name in ['ProjectThreadViewSet', 'ThreadMessageViewSet']:
+            return True
+
         # 5. Mutation Mapping
         perm_map = {
             'UserViewSet': 'can_manage_users',
