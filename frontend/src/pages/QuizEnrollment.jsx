@@ -23,6 +23,14 @@ export default function QuizEnrollment() {
 
     const handleStart = async () => {
         if (!accepted) return;
+
+        // Trigger fullscreen early (must be in user interaction)
+        if (quiz?.require_fullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.warn("Fullscreen permission denied or blocked.");
+            });
+        }
+
         try {
             const email = sessionStorage.getItem(`quiz_email_${id}`);
             await api.post(`/quizzes/${id}/start_quiz/`, { email });

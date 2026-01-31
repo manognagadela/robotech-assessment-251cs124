@@ -17,23 +17,66 @@ export default function QuizEngine() {
     const guestEmail = sessionStorage.getItem(`quiz_email_${id}`);
 
     useEffect(() => {
-        // Disable Interactions
+        // 1. Strict Interaction Lock
         const disableContext = (e) => e.preventDefault();
+        const disableKeydown = (e) => {
+            // Disable Alt+Tab, Win, Ctrl+W, F12 etc where possible
+            if (e.altKey || e.ctrlKey || e.metaKey || e.key === 'F12') {
+                // We can't block everything, but we can detect it
+            }
+        };
         document.addEventListener('contextmenu', disableContext);
+        document.addEventListener('keydown', disableKeydown);
 
-        // Tab Switch Proctoring
+        // 2. Fullscreen Enforcement
+        const enterFS = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.warn("Fullscreen deferred: Awaiting user pulse.");
+                });
+            }
+        };
+
+        const checkFS = () => {
+            if (quiz?.require_fullscreen && !document.fullscreenElement && !loading) {
+                handleViolation("Protocol Violation: Fullscreen exit detected.");
+            }
+        };
+
+        // 3. Tab Switch Proctoring
         const handleVisibility = () => {
-            if (document.visibilityState === 'hidden') {
+            if (document.visibilityState === 'hidden' && quiz?.auto_submit_on_tab_switch) {
                 handleViolation("Tab focus loss detected.");
             }
         };
+
+        // 4. Initial Trigger & Listeners
         document.addEventListener('visibilitychange', handleVisibility);
+        document.addEventListener('fullscreenchange', checkFS);
+        window.addEventListener('blur', handleVisibility);
+
+        // Auto-enforce on heartbeat/click
+        const heartbeat = setInterval(() => {
+            if (quiz?.require_fullscreen && !document.fullscreenElement && !loading && !isViolation) {
+                enterFS();
+            }
+        }, 3000);
+
+        const handleManualFS = () => {
+            if (quiz?.require_fullscreen && !document.fullscreenElement) enterFS();
+        };
+        document.addEventListener('click', handleManualFS);
 
         return () => {
             document.removeEventListener('contextmenu', disableContext);
+            document.removeEventListener('keydown', disableKeydown);
             document.removeEventListener('visibilitychange', handleVisibility);
+            document.removeEventListener('fullscreenchange', checkFS);
+            document.removeEventListener('click', handleManualFS);
+            window.removeEventListener('blur', handleVisibility);
+            clearInterval(heartbeat);
         };
-    }, []);
+    }, [quiz, loading, isViolation]);
 
     useEffect(() => {
         const init = async () => {

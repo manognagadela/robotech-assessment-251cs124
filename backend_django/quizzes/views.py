@@ -180,6 +180,11 @@ class QuizAttemptViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [GlobalPermission]
     
     def get_queryset(self):
-        if self.request.user.is_superuser:
+        user = self.request.user
+        if not user.is_authenticated:
+            return QuizAttempt.objects.none()
+            
+        if user.is_superuser or user.user_roles.filter(can_manage_forms=True).exists():
             return QuizAttempt.objects.all()
-        return QuizAttempt.objects.filter(user=self.request.user)
+            
+        return QuizAttempt.objects.filter(user=user)

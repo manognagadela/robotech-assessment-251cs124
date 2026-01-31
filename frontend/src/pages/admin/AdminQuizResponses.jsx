@@ -49,8 +49,11 @@ export default function AdminQuizResponses() {
                                 className={`p-5 rounded-2xl border cursor-pointer transition-all flex flex-col gap-2 ${selectedAttempt?.id === a.id ? 'bg-cyan-600/10 border-cyan-500/50' : 'bg-[#0a0a0f] border-white/5 hover:border-white/20'}`}
                             >
                                 <div className="flex justify-between items-center">
-                                    <span className="font-bold text-sm">{a.user_details?.profile?.full_name || a.user_details?.username}</span>
-                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${a.status === 'SUBMITTED' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{a.status}</span>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-sm tracking-tight">{a.user_details?.profile?.full_name || a.candidate_name || a.user_details?.username}</span>
+                                        <span className="text-[9px] text-gray-600 font-mono">{a.user_details?.email || a.candidate_email}</span>
+                                    </div>
+                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${a.status === 'SUBMITTED' ? 'bg-green-500/10 text-green-500' : (a.status === 'DISQUALIFIED' ? 'bg-orange-500/10 text-orange-500' : 'bg-red-500/10 text-red-500')}`}>{a.status}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-[10px] text-gray-500">
                                     <span className="font-mono">SCORE: <span className="text-gray-200 font-bold">{a.score}</span></span>
@@ -68,8 +71,18 @@ export default function AdminQuizResponses() {
                         <div className="bg-[#0a0a0f] border border-white/10 rounded-[32px] p-8 md:p-12">
                             <div className="flex justify-between items-start mb-12 pb-8 border-b border-white/5">
                                 <div>
-                                    <h2 className="text-2xl font-bold font-[Orbitron] uppercase tracking-tight text-cyan-400">{selectedAttempt.user_details?.profile?.full_name || selectedAttempt.user_details?.username}</h2>
-                                    <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-widest">{selectedAttempt.user_details?.email}</p>
+                                    <h2 className="text-2xl font-bold font-[Orbitron] uppercase tracking-tight text-cyan-400">
+                                        {selectedAttempt.user_details?.profile?.full_name || selectedAttempt.candidate_name || selectedAttempt.user_details?.username}
+                                    </h2>
+                                    <div className="flex flex-wrap gap-3 mt-2">
+                                        <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">{selectedAttempt.user_details?.email || selectedAttempt.candidate_email}</p>
+                                        {selectedAttempt.user_details?.profile?.position && (
+                                            <span className="text-[9px] bg-white/5 px-2 py-0.5 rounded text-gray-400 uppercase font-bold">POS: {selectedAttempt.user_details?.profile?.position}</span>
+                                        )}
+                                        {selectedAttempt.user_details?.profile?.sigs?.map(sig => (
+                                            <span key={sig.id} className="text-[9px] bg-cyan-500/10 px-2 py-0.5 rounded text-cyan-500 uppercase font-bold">SIG: {sig.name}</span>
+                                        ))}
+                                    </div>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">Total Intelligence Core</p>
