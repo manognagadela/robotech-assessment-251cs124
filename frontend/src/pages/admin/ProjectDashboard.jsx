@@ -101,6 +101,25 @@ export default function ProjectDashboard() {
         return () => clearInterval(interval);
     }, [id, activeTab]);
 
+    // Clear unread when viewing thread
+    useEffect(() => {
+        const currentThreadId = parseInt(searchParams.get("thread"));
+        if (activeTab === 'discussions' && currentThreadId && project && unreadMsgIds.size > 0) {
+            const thread = project.threads.find(t => t.id === currentThreadId);
+            if (thread) {
+                const newUnread = new Set(unreadMsgIds);
+                let changed = false;
+                thread.messages.forEach(m => {
+                    if (newUnread.has(m.id)) {
+                        newUnread.delete(m.id);
+                        changed = true;
+                    }
+                });
+                if (changed) setUnreadMsgIds(newUnread);
+            }
+        }
+    }, [activeTab, searchParams, project]);
+
     // Request Notification Permission on mount
     useEffect(() => {
         if ("Notification" in window && Notification.permission === "default") {
@@ -328,6 +347,7 @@ function TasksTab({ project, user, allUsers, onUpdate }) {
                                 <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">
                                     {t.assigned_to_details ? `Assigned to: ${t.assigned_to_details.username}` : "Unassigned"}
                                 </p>
+                                {t.requirements && <p className="text-sm text-gray-400 mt-2 whitespace-pre-wrap">{t.requirements}</p>}
                             </div>
                         </div>
                         {t.due_date && <span className="text-xs text-red-500 font-mono">DEADLINE: {t.due_date}</span>}
@@ -465,7 +485,7 @@ function DiscussionsTab({ project, user, onUpdate, unreadMsgIds, setUnreadMsgIds
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar bg-black/20">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar bg-black/20" ref={r => r && (r.scrollTop = r.scrollHeight)}>
                             {currentThread.messages?.map(m => (
                                 <div key={m.id} className={`flex flex-col ${m.author === user.id ? 'items-end' : 'items-start'} animate-slide-in`}>
                                     <div className="flex items-center gap-2 mb-2">
@@ -485,6 +505,8 @@ function DiscussionsTab({ project, user, onUpdate, unreadMsgIds, setUnreadMsgIds
                                     <p className="text-[8px] font-black uppercase tracking-[0.4em]">Channel Dark</p>
                                 </div>
                             )}
+                            {/* Dummy element to scroll to */}
+                            <div ref={el => el?.scrollIntoView({ behavior: 'smooth' })} />
                         </div>
 
                         <form onSubmit={handleSendMsg} className="p-6 bg-black/40 border-t border-white/10 flex gap-4">

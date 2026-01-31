@@ -37,7 +37,8 @@ class GlobalPermission(permissions.BasePermission):
             'FormSectionViewSet',
             'FormFieldViewSet',
             'SigViewSet',
-            'TeamPositionViewSet'
+            'TeamPositionViewSet',
+            'QuizViewSet'
         ]
 
         if view_name in public_post_views and request.method == 'POST':
@@ -83,7 +84,11 @@ class GlobalPermission(permissions.BasePermission):
         # if request.method in permissions.SAFE_METHODS:
         #    return True
 
-        if view_name in ['RecruitmentDriveViewSet', 'TimelineEventViewSet', 'QuizViewSet'] and request.method in permissions.SAFE_METHODS:
+        # 4. Shared Visibility Check removed to enforce Strict RBAC
+        # if request.method in permissions.SAFE_METHODS:
+        #    return True
+
+        if view_name in ['RecruitmentDriveViewSet', 'TimelineEventViewSet'] and request.method in permissions.SAFE_METHODS:
              return True
 
         # 5. Mutation Mapping
