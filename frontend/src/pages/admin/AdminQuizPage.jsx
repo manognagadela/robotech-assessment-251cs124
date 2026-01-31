@@ -48,6 +48,14 @@ export default function AdminQuizPage() {
         } catch (err) { alert("Command rejected."); }
     };
 
+    const handleDelete = async (quizId) => {
+        if (!window.confirm("CRITICAL WARNING: This will permanently purge the assessment and ALL associated records. Confirm deletion?")) return;
+        try {
+            await api.delete(`/quizzes/${quizId}/`);
+            setQuizzes(quizzes.filter(q => q.id !== quizId));
+        } catch (err) { alert("Purge sequence failed."); }
+    };
+
     if (loading) return <div className="p-10 text-cyan-500 animate-pulse font-black uppercase tracking-widest text-center">Opening Exam Vault...</div>;
 
     return (
@@ -120,6 +128,13 @@ export default function AdminQuizPage() {
                                 className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${quiz.is_active ? 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white' : 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500 hover:text-white'}`}
                             >
                                 {quiz.is_active ? 'Lock' : 'Open'}
+                            </button>
+                            <button
+                                onClick={() => handleDelete(quiz.id)}
+                                className="py-4 px-4 bg-red-900/10 hover:bg-red-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-red-500/20 text-red-500"
+                                title="Delete Assessment"
+                            >
+                                ✕
                             </button>
                         </div>
                     </div>

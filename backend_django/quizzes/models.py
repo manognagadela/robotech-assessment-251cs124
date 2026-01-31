@@ -6,6 +6,7 @@ import uuid
 class Quiz(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    instructions = models.TextField(blank=True, default="You are about to enter a proctored assessment environment. Please ensure your surroundings are compliant with standard evaluation protocols.")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_quizzes')
     
     join_code = models.CharField(max_length=20, unique=True, help_text="Code required to enter the quiz")

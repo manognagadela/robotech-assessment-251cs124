@@ -30,7 +30,7 @@ export default function AdminQuizResponses() {
 
     return (
         <div className="p-6 md:p-10 max-w-7xl mx-auto text-white">
-            <button onClick={() => navigate("/admin/quizzes")} className="text-cyan-500 hover:outline mb-8 flex items-center gap-2 uppercase text-[10px] font-black tracking-widest">← Return to Vault</button>
+            <button onClick={() => navigate("/portal/quizzes")} className="text-cyan-500 hover:outline mb-8 flex items-center gap-2 uppercase text-[10px] font-black tracking-widest">← Return to Vault</button>
 
             <div className="mb-12">
                 <h1 className="text-4xl font-bold font-[Orbitron] uppercase tracking-tighter">{quiz.title}</h1>

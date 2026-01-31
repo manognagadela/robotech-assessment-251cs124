@@ -145,6 +145,15 @@ export default function AdminQuizBuilder() {
                                 <Toggle label="Disable Interactions (Right Click)" value={editQuiz.disable_right_click} onChange={v => setEditQuiz({ ...editQuiz, disable_right_click: v })} />
                             </div>
 
+                            <div className="pt-4 border-t border-white/5">
+                                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Instructions</label>
+                                <textarea
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:border-cyan-500 outline-none h-32"
+                                    value={editQuiz.instructions || ""}
+                                    onChange={e => setEditQuiz({ ...editQuiz, instructions: e.target.value })}
+                                />
+                            </div>
+
                             <button
                                 onClick={handleSaveQuiz}
                                 disabled={saving}

@@ -44,7 +44,7 @@ export default function QuizEnrollment() {
                     <div className="mb-10 text-center md:text-left">
                         <span className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.5em] mb-4 block">Instructional Protocol</span>
                         <h1 className="text-4xl font-bold font-[Orbitron] uppercase tracking-tighter mb-4">{quiz.title}</h1>
-                        <p className="text-gray-400 text-sm leading-relaxed">{quiz.description || "You are about to enter a proctored assessment environment. Please ensure your surroundings are compliant with standard evaluation protocols."}</p>
+                        <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap">{quiz.instructions || quiz.description || "You are about to enter a proctored assessment environment. Please ensure your surroundings are compliant with standard evaluation protocols."}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
