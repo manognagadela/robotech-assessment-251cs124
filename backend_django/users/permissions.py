@@ -83,7 +83,7 @@ class GlobalPermission(permissions.BasePermission):
         # if request.method in permissions.SAFE_METHODS:
         #    return True
 
-        if view_name in ['RecruitmentDriveViewSet', 'TimelineEventViewSet'] and request.method in permissions.SAFE_METHODS:
+        if view_name in ['RecruitmentDriveViewSet', 'TimelineEventViewSet', 'QuizViewSet'] and request.method in permissions.SAFE_METHODS:
              return True
 
         # 5. Mutation Mapping

@@ -32,3 +32,25 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
         model = QuizAttempt
         fields = '__all__'
         read_only_fields = ['user', 'score', 'submitted_at', 'candidate_name', 'candidate_email']
+
+# Public/Safe Serializers (No Answers)
+class PublicOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Option
+        fields = ['id', 'question', 'text', 'order'] # Exclude is_correct
+
+class PublicQuestionSerializer(serializers.ModelSerializer):
+    options = PublicOptionSerializer(many=True, read_only=True)
+    class Meta:
+        model = Question
+        fields = ['id', 'quiz', 'text', 'question_type', 'marks', 'negative_marks', 'order', 'options']
+
+class PublicQuizSerializer(serializers.ModelSerializer):
+    questions = PublicQuestionSerializer(many=True, read_only=True)
+    creator_details = UserSerializer(source='creator', read_only=True)
+    question_count = serializers.IntegerField(source='questions.count', read_only=True)
+    
+    class Meta:
+        model = Quiz
+        fields = '__all__'
+        read_only_fields = ['creator', 'created_at']

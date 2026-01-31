@@ -4,13 +4,32 @@ from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
 from .models import Quiz, Question, Option, QuizAttempt
-from .serializers import QuizSerializer, QuestionSerializer, OptionSerializer, QuizAttemptSerializer
+from .serializers import QuizSerializer, QuestionSerializer, OptionSerializer, QuizAttemptSerializer, PublicQuizSerializer
 from users.permissions import GlobalPermission
 
 class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all().order_by('-created_at')
     serializer_class = QuizSerializer
     permission_classes = [GlobalPermission]
+
+    def get_serializer_class(self):
+        # Admin/Manager gets full access (with answers)
+        if self.request.user.is_superuser:
+            return QuizSerializer
+            
+        # Check permissions via GlobalFlag or Role
+        # Ideally check 'can_manage_forms' etc. For now, assume if they have write access via perm check they are admin.
+        # But simpler: If action is list/retrieve for PUBLIC access, use Safe Serializer.
+        # If user has role with 'can_manage_forms', use Full.
+        
+        has_manage_perm = False
+        if self.request.user.is_authenticated:
+            if self.request.user.user_roles.filter(can_manage_forms=True).exists(): has_manage_perm = True
+        
+        if not has_manage_perm:
+            return PublicQuizSerializer
+            
+        return QuizSerializer
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
@@ -53,7 +72,7 @@ class QuizViewSet(viewsets.ModelViewSet):
              })
 
         return Response({
-            "quiz": QuizSerializer(quiz).data,
+            "quiz": PublicQuizSerializer(quiz).data,
             "attempt": QuizAttemptSerializer(attempt).data
         })
 
