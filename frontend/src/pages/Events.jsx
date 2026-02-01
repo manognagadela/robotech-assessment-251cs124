@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { buildMediaUrl } from "../utils/mediaUrl";
+import { formatDateIST } from "../utils/dateUtils";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -84,7 +85,7 @@ export default function Events() {
                         <div className="w-full h-full flex items-center justify-center bg-black/50 text-gray-700 font-black tracking-widest text-2xl">ROBOTECH</div>
                       )}
                       <div className="absolute top-4 left-4 bg-cyan-500 text-black font-black px-4 py-2 rounded-lg text-sm shadow-[0_0_20px_rgba(6,182,212,0.4)] uppercase tracking-wider">
-                        {new Date(event.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {formatDateIST(event.date, { hour: undefined, minute: undefined, hour12: undefined })}
                       </div>
                     </div>
                     <div className="p-8 flex-1 flex flex-col justify-between">
@@ -132,7 +133,7 @@ export default function Events() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h3 className="text-xl font-bold font-[Orbitron] text-gray-300 group-hover:text-white mb-1 uppercase truncate">{event.title}</h3>
-                        <p className="text-xs text-gray-500 font-mono">{new Date(event.date).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-500 font-mono">{formatDateIST(event.date, { hour: undefined, minute: undefined, hour12: undefined })}</p>
                       </div>
                     </div>
                     <div className="p-6">

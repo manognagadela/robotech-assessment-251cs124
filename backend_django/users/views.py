@@ -345,9 +345,14 @@ class UserProfileView(APIView):
         def set_if(field):
             if field in data:
                 val = data[field]
-                if field == 'year_of_joining' and val:
-                    try: val = int(val)
-                    except: val = None
+                if field == 'year_of_joining':
+                    try:
+                        if val and str(val).strip():
+                            val = int(val)
+                        else:
+                            val = None
+                    except (ValueError, TypeError):
+                        val = None
                 setattr(profile, field, val)
         
         fields = ['full_name', 'roll_number', 'department', 'sig', 'year', 
@@ -363,17 +368,35 @@ class UserProfileView(APIView):
             elif isinstance(val, str):
                 profile.is_public = val.lower() == 'true'
             else:
-                 # Default fallback if unknown type
                  profile.is_public = True
 
-        if 'image' in request.FILES: profile.image = request.FILES['image']
+        if 'image' in request.FILES: 
+            profile.image = request.FILES['image']
 
         if 'sigs' in data:
-            # Self-update of SIGs is usually NOT allowed. 
-            # User can only request, but direct update is restricted.
-            # Assuming 'sigs' update is blocked here for security unless explicitly allowed policy.
-            # For now, we block it in self-profile update to match strict policy.
-            pass 
+            try:
+                # Handle sigs (many-to-many)
+                # DRF data might be a list already, or we might need getlist if form-data
+                s_ids = data['sigs']
+                if hasattr(data, 'getlist'):
+                    s_ids = data.getlist('sigs')
+                
+                # If it's a single string (some clients might send JSON or comma-sep)
+                if isinstance(s_ids, str):
+                    try:
+                        s_ids = json.loads(s_ids)
+                    except:
+                        if ',' in s_ids: s_ids = s_ids.split(',')
+                        else: s_ids = [s_ids]
+                
+                if isinstance(s_ids, list):
+                    valid_ids = []
+                    for sid in s_ids:
+                        try: valid_ids.append(int(sid))
+                        except: pass
+                    profile.sigs.set(valid_ids)
+            except Exception as e:
+                print(f"Error updating own sigs: {e}")
         
         profile.save()
         

@@ -85,14 +85,14 @@ class User(AbstractUser):
 class MemberProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', null=True, blank=True)
     
-    full_name = models.CharField(max_length=100)
+    full_name = models.CharField(max_length=100, blank=True)
     roll_number = models.CharField(max_length=20, blank=True)
     department = models.CharField(max_length=100, blank=True) 
     year_of_joining = models.IntegerField(null=True, blank=True)
     
     sig = models.CharField(max_length=100, blank=True) 
     sigs = models.ManyToManyField('Sig', blank=True, related_name='members') 
-    position = models.CharField(max_length=100) 
+    position = models.CharField(max_length=100, blank=True) 
     team_name = models.CharField(max_length=100, blank=True) 
     
     is_public = models.BooleanField(default=True) 

@@ -17,8 +17,6 @@ export default function AdminProfile() {
         instagram_url: "",
         email: "",
         description: "",
-        email: "",
-        description: "",
         is_public: true, // Default
         sigs: [] // Array of IDs
     });
@@ -41,9 +39,6 @@ export default function AdminProfile() {
                 sig: user.profile.sig || "",
                 github_url: user.profile.github_url || "",
                 linkedin_url: user.profile.linkedin_url || "",
-                instagram_url: user.profile.instagram_url || "",
-                email: user.profile.email || user.email || "",
-                description: user.profile.description || "",
                 instagram_url: user.profile.instagram_url || "",
                 email: user.profile.email || user.email || "",
                 description: user.profile.description || "",
