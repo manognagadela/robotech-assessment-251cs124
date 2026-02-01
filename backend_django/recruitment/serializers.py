@@ -7,10 +7,16 @@ class TimelineEventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RecruitmentAssignmentSerializer(serializers.ModelSerializer):
-    sig_name = serializers.CharField(source='sig.name', read_only=True)
+    sig_name = serializers.SerializerMethodField()
     class Meta:
         model = RecruitmentAssignment
         fields = '__all__'
+
+    def get_sig_name(self, obj):
+        try:
+            return obj.sig.name if obj.sig else "General"
+        except:
+            return "N/A"
 
 class RecruitmentApplicationSerializer(serializers.ModelSerializer):
     sig_name = serializers.SerializerMethodField()
