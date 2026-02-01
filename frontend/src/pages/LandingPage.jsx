@@ -211,18 +211,12 @@ export default function LandingPage() {
             </div>
 
             <div className="pt-16">
-              {recruitment.registration_link ? (
-                <Link
-                  to="/recruitment"
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-400 hover:to-pink-500 text-white px-8 py-4 rounded-xl font-bold text-lg uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all transform hover:scale-105 hover:shadow-orange-500/40"
-                >
-                  Enter Recruitment Portal <i className="fa-solid fa-arrow-right"></i>
-                </Link>
-              ) : (
-                <button disabled className="bg-white/10 text-gray-400 px-8 py-4 rounded-xl font-bold uppercase tracking-widest cursor-not-allowed">
-                  Applications Opening Soon
-                </button>
-              )}
+              <Link
+                to="/recruitment"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-400 hover:to-pink-500 text-white px-8 py-4 rounded-xl font-bold text-lg uppercase tracking-widest shadow-lg shadow-orange-500/20 transition-all transform hover:scale-105 hover:shadow-orange-500/40"
+              >
+                Enter Recruitment Portal <i className="fa-solid fa-arrow-right"></i>
+              </Link>
             </div>
           </div>
         </section>

@@ -12,8 +12,8 @@ export default function Navbar() {
     const checkRecruitment = async () => {
       try {
         const res = await api.get("/recruitment/drives/active_public/");
-        if (res.data && res.data.registration_link) {
-          setRecruitmentLink(res.data.registration_link);
+        if (res.data) {
+          setRecruitmentLink(true); // Just indicate it exists
         }
       } catch (e) { }
     };
@@ -74,8 +74,8 @@ export default function Navbar() {
             <Link to="/events" className="nav-link">Events</Link>
 
             {recruitmentLink && (
-              <a
-                href="/#recruitment"
+              <Link
+                to="/recruitment"
                 className="nav-link text-orange-400 font-bold hover:text-orange-300 relative group"
               >
                 Recruitment Open
@@ -83,7 +83,7 @@ export default function Navbar() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
                 </span>
-              </a>
+              </Link>
             )}
 
             <Link to="/team" className="nav-link">Team</Link>
@@ -161,14 +161,13 @@ export default function Navbar() {
             <Link onClick={() => setMobileOpen(false)} to="/events" className="mobile-link">Events</Link>
 
             {recruitmentLink && (
-              <a
-                href={recruitmentLink}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                onClick={() => setMobileOpen(false)}
+                to="/recruitment"
                 className="mobile-link text-orange-400 font-bold"
               >
                 Join Us (Recruitment Open)
-              </a>
+              </Link>
             )}
 
             <Link onClick={() => setMobileOpen(false)} to="/team" className="mobile-link">Team</Link>
