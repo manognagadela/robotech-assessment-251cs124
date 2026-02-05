@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RoboTech Quiz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logos">
+    <img src="../public/robotech_nitk_logo.jpeg" alt="RoboTech Logo" class="robotech-logo">
+    <img src="../public/nitk_logo.png" alt="NITK Logo">
+  </div>
+  <h1>RoboTech Recruitment Quiz</h1>
+</header>
+
+<!-- TIMER -->
+<div class="timer">
+  Time Left: <span id="time">15</span> minutes
+</div>
+
+<!-- MAIN QUIZ AREA -->
+<div class="container">
+
+  <!-- QUESTION PALETTE -->
+  <div class="palette">
+    <h3>Questions</h3>
+    <button class="q-btn unanswered">1</button>
+    <button class="q-btn unanswered">2</button>
+    <button class="q-btn unanswered">3</button>
+
+    <p class="legend">
+      Gray: Unanswered<br>
+      Green: Answered<br>
+      orange: Marked
+    </p>
+  </div>
+
+  <!-- QUESTION CONTENT -->
+  <div class="question-box">
+    <p class="question">
+      What does HTML stand for?
+    </p>
+
+    <div class="options">
+      <label><input type="radio" name="q1"> Hyper Text Markup Language</label><br>
+      <label><input type="radio" name="q1"> Home Tool Markup Language</label><br>
+      <label><input type="radio" name="q1"> Hyperlinks Text Mark Language</label>
+    </div>
+
+    <div class="actions">
+      <button id="mark">Mark for Review</button>
+      <button id="clear">Clear Answer</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SUBMIT -->
+<div class="submit-box">
+  <button id="submit" disabled>Final Submit</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
